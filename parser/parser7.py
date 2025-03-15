@@ -52,9 +52,19 @@ async def parse_pet_details(pet_id):
             "gender": "",
             "descriptions": [],
             "images": [],
-            "address": ""
+            "address": "",
+            "owner_phone": ""
         }
         
+        try:
+            phone_element = await page.query_selector("div.pet-header__right a.btn.btn-primary")
+            if phone_element:
+                phone_href = await phone_element.get_attribute("href")
+                if phone_href and phone_href.startswith("tel:"):
+                    pet_data["owner_phone"] = phone_href.replace("tel:", "")
+                    
+        except Exception as e:
+            print(f"Ошибка при извлечении номера телефона: {e}")
         # Извлекаем имя и пол
         name_element = await page.query_selector("p.pet-name")
         if name_element:
