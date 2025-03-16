@@ -1,6 +1,6 @@
 import requests
 
-VK_ACCESS_TOKEN = "your_access_token"  # 🔹 Вставьте ваш токен
+VK_ACCESS_TOKEN = "your_access_token"
 API_VERSION = "5.131"
 
 
