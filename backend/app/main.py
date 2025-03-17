@@ -1,8 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
 from app.routes import animals, users
+from app.database.autoupdate import fetch_and_store_pets
 
 app = FastAPI(title="Поиск потерянных животных")
+
+""" Целесообразнео запустить парсинг обновление базы данных в отдельном процессе """
+# Запуск фона обновления данных при старте приложения
+@app.on_event("startup")
+async def startup_event():
+    # Запускаем автообновление данных в фоновом режиме
+    asyncio.create_task(fetch_and_store_pets())
 
 # Настройка CORS
 app.add_middleware(
