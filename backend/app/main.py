@@ -2,16 +2,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from app.routes import animals, users
-from app.database.autoupdate import fetch_and_store_pets
+from app.database.db import get_db_connection
+# from app.database.autoupdate import fetch_and_store_pets
 
 app = FastAPI(title="Поиск потерянных животных")
 
 """ Целесообразно запустить парсинг обновление базы данных в отдельном процессе """
 # Запуск фона обновления данных при старте приложения
-@app.on_event("startup")
-async def startup_event():
-    # Запускаем автообновление данных в фоновом режиме
-    asyncio.create_task(fetch_and_store_pets())
+# @app.on_event("startup")
+# async def startup_event():
+#     # Запускаем автообновление данных в фоновом режиме
+#     asyncio.create_task(fetch_and_store_pets())
 
 # Настройка CORS
 app.add_middleware(
@@ -25,6 +26,21 @@ app.add_middleware(
 # Подключение эндпоинтов
 app.include_router(animals.router)
 app.include_router(users.router)
+
+@app.get("/test-db")
+async def test_db_connection():
+    try:
+        conn = await get_db_connection()
+        # Простой тестовый запрос
+        result = await conn.fetch("SELECT 1")
+        await conn.close()
+        return {"status": "success", "message": "Подключение к БД установлено"}
+    except Exception as e:
+        return {"status": "error", "message": f"Ошибка подключения: {str(e)}"}
+
+@app.get("/")
+async def root():
+    return {"message": "API работает"}
 
 if __name__ == "__main__":
     import uvicorn

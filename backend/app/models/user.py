@@ -1,21 +1,23 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 
 class UserBase(BaseModel):
-    vk_id: int = Field(..., description="ID пользователя ВКонтакте")
-    first_name: str = Field(..., description="Имя пользователя")
-    last_name: str = Field(..., description="Фамилия пользователя")
-    
+    vk_id: Optional[int] = None
+    # name: Optional[str] = None
+    # phone: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
 class UserCreate(UserBase):
     pass
 
-class UserInDB(UserBase):
+class UserUpdate(UserBase):
+    pass
+
+class User(UserBase):
     id: int
     created_at: datetime
-    
-    class Config:
-        orm_mode = True
 
-class User(UserInDB):
-    pass
+    class Config:
+        from_attributes = True
