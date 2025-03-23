@@ -10,7 +10,7 @@ python -m venv venv
 venv\Scripts\activate
 ### 2. Установка зависимостей
 в терминале:
-pip install -r requirements.txt
+#pip install -r requirements.txt
 
 ### 3. Настройка базы данных
 создайте файл .env, в нем:
@@ -18,8 +18,8 @@ pip install -r requirements.txt
 
 ### 4. Запуск сервера
 в терминале:
-cd backend
-uvicorn app.main:app --reload
+#cd backend
+#uvicorn app.main:app --reload
 ## Документация API
 FastAPI автоматически генерирует интерактивную документацию:
 - Swagger UI: http://localhost:8000/docs
@@ -32,5 +32,5 @@ FastAPI автоматически генерирует интерактивну
 ## Парсер данных
 
 Для запуска парсера данных с сайта:
-в терминале:
-python -m backend.app.database.db
+#в терминале:
+#python -m backend.app.database.db
