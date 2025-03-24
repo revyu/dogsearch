@@ -14,10 +14,12 @@ pip install -r requirements.txt
 
 ### 3. Настройка базы данных
 создайте файл .env, в нем:  
-DB_USER='your_username'  
-DB_PASSWORD='your_password'  
-DB_NAME='your_database'  
-DB_HOST='your_host'  
+B_USER='sfp_user'
+DB_PASSWORD='uIWVTcwnX7XNZ0wyksi3dDUJ9NClQH7J'
+DB_NAME='animal_finder'
+DB_HOST='dpg-cva02i2j1k6c739d0dm0-a.frankfurt-postgres.render.com'
+
+DATABASE_URL=postgresql+asyncpg://spf_user:uIWVTcwnX7XNZ0wyksi3dDUJ9NClQH7J@dpg-cva02i2j1k6c739d0dm0-a.frankfurt-postgres.render.com:5432/animal_finder
 
 ### 4. Запуск сервера
 в терминале:  
