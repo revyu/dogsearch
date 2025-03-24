@@ -10,7 +10,7 @@ async def get_animals():
     conn = await get_db_connection()
     try:
         pets = await conn.fetch("""
-            SELECT pet_id, name, gender, descriptions, images, address
+            SELECT pet_id, name, gender, descriptions, images, address, user_id
             FROM pets
         """)
         return [dict(pet) for pet in pets]
@@ -22,7 +22,7 @@ async def get_animal(pet_id: str):
     conn = await get_db_connection()
     try:
         pet = await conn.fetchrow("""
-            SELECT pet_id, name, gender, descriptions, images, address
+            SELECT pet_id, name, gender, descriptions, images, address, user_id
             FROM pets
             WHERE pet_id = $1
         """, pet_id)
@@ -37,11 +37,11 @@ async def create_animal(animal: AnimalCreate):
     conn = await get_db_connection()
     try:
         pet = await conn.fetchrow("""
-            INSERT INTO pets (pet_id, name, gender, descriptions, images, address)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING pet_id, name, gender, descriptions, images, address
+            INSERT INTO pets (pet_id, name, gender, descriptions, images, address, user_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING pet_id, name, gender, descriptions, images, address, user_id
         """, animal.pet_id, animal.name, animal.gender, animal.descriptions, 
-             animal.images, animal.address)
+             animal.images, animal.address, animal.user_id)
         return dict(pet)
     finally:
         await close_db_connection(conn)
@@ -52,11 +52,17 @@ async def update_animal(animal_id: str, animal_update: AnimalUpdate):
     try:
         pet = await conn.fetchrow("""
             UPDATE pets
-            SET name = $1, gender = $2, descriptions = $3, images = $4, address = $5
-            WHERE pet_id = $6
-            RETURNING pet_id, name, gender, descriptions, images, address
+            SET name = $1, 
+                gender = $2, 
+                descriptions = $3, 
+                images = $4, 
+                address = $5,
+                user_id = $6
+            WHERE pet_id = $7
+            RETURNING pet_id, name, gender, descriptions, images, address, user_id
         """, animal_update.name, animal_update.gender, animal_update.descriptions, 
-             animal_update.images, animal_update.address, animal_id)
+             animal_update.images, animal_update.address, animal_update.user_id, 
+             animal_id)
         if pet is None:
             raise HTTPException(status_code=404, detail="Животное не найдено")
         return dict(pet)
@@ -64,14 +70,14 @@ async def update_animal(animal_id: str, animal_update: AnimalUpdate):
         await close_db_connection(conn)
 
 @router.delete("/{animal_id}")
-async def delete_animal(animal_id: int):
+async def delete_animal(animal_id: str):
     conn = await get_db_connection()
     try:
         pet = await conn.fetchrow("""
             DELETE FROM pets
             WHERE pet_id = $1
-            RETURNING pet_id, name, gender, descriptions, images, address
-        """, str(animal_id))
+            RETURNING pet_id, name, gender, descriptions, images, address, user_id
+        """, animal_id)
         if pet is None:
             raise HTTPException(status_code=404, detail="Животное не найдено")
         return {"message": "Объявление удалено"}

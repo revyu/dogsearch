@@ -14,10 +14,10 @@ class AnimalBase(BaseModel):
     # photo_url: Optional[str] = None
     # latitude: Optional[float] = None
     # longitude: Optional[float] = None
-    # owner_id: Optional[int] = None
     descriptions: Optional[List[str]] = None
     images: Optional[List[str]] = None
     address: Optional[str] = None
+    user_id: Optional[int] = None
 
 class AnimalCreate(AnimalBase):
     pass

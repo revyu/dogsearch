@@ -23,36 +23,85 @@ async def close_db_connection(connection):
 
 async def process_pet(conn, pet_data):
     try:
+        # Отладочная информация
+        print(f"\nОбработка питомца:")
+        print(f"ID: {pet_data['id']}")
+        print(f"Телефон владельца: {pet_data.get('owner_phone')}")
+
+        # Сначала обрабатываем пользователя (владельца)
+        user_id = None
+        if pet_data.get("owner_phone"):  # Используем .get() для безопасного получения
+            print(f"Найден телефон: {pet_data['owner_phone']}")
+            
+            # Проверяем, существует ли пользователь
+            user = await conn.fetchrow("""
+                SELECT id FROM users 
+                WHERE phone = $1
+            """, pet_data["owner_phone"])
+            
+            if user:
+                print(f"Найден существующий пользователь с ID: {user['id']}")
+                user_id = user['id']
+            else:
+                print("Создаем нового пользователя...")
+                # Создаем нового пользователя
+                try:
+                    user = await conn.fetchrow("""
+                        INSERT INTO users (phone, created_at) 
+                        VALUES ($1, CURRENT_TIMESTAMP)
+                        RETURNING id
+                    """, pet_data["owner_phone"])
+                    user_id = user['id']
+                    print(f"Создан новый пользователь с ID: {user_id}")
+                except Exception as e:
+                    print(f"Ошибка при создании пользователя: {str(e)}")
+        else:
+            print("Телефон владельца не указан")
+
+        # Добавляем питомца
+        print(f"Добавляем питомца с user_id: {user_id}")
         await conn.execute("""
             INSERT INTO pets (
                 pet_id, name, gender, descriptions, 
-                images, address
-            ) VALUES ($1, $2, $3, $4, $5, $6)
+                images, address, user_id
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (pet_id) DO UPDATE SET
                 name = $2,
                 gender = $3,
                 descriptions = $4,
                 images = $5,
-                address = $6
-                
+                address = $6,
+                user_id = $7
         """, 
         pet_data["id"],
         pet_data["name"],
         pet_data["gender"],
         pet_data["descriptions"],
         pet_data["images"],
-        pet_data["address"])
+        pet_data["address"],
+        user_id)
         
+        print("Питомец успешно добавлен/обновлен")
         return True
     except Exception as e:
         print(f"Ошибка при обработке питомца {pet_data['id']}: {str(e)}")
         return False
 
 async def main():
-    # Добавляем инициализацию базы данных
     conn = await get_db_connection()
     try:
-       
+        # 1. Создаем таблицы если их нет
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                vk_id INTEGER,
+                first_name TEXT,
+                last_name TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                phone VARCHAR(20) UNIQUE  -- Добавляем UNIQUE для телефона
+            )
+        """)
+
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS pets (
                 pet_id TEXT PRIMARY KEY,
@@ -60,30 +109,50 @@ async def main():
                 gender TEXT,
                 descriptions TEXT[],
                 images TEXT[],
-                address TEXT
+                address TEXT,
+                user_id INTEGER REFERENCES users(id)
             )
         """)
         
-        # Остальной код main()...
+        # 2. Получаем список питомцев
         pet_ids = await get_pet_ids_from_map()
         total_pets = len(pet_ids)
         print(f"Всего найдено питомцев: {total_pets}")
         
-        num_pets = min(10, total_pets)  # Обрабатываем первые 5 питомцев
-        print(f"Будет обработано питомцев: {num_pets}")
+        # 3. Определяем количество питомцев для обработки
+        try:
+            num_pets = int(input(f"Введите количество питомцев для парсинга (максимум {total_pets}): "))
+            num_pets = min(num_pets, total_pets)
+        except ValueError:
+            print("Неверный ввод. Будет обработано 10 питомцев.")
+            num_pets = 10
         
+        # 4. Обрабатываем питомцев
         success_count = 0
         for i, pet_id in enumerate(pet_ids[:num_pets], 1):
-            print(f"Обработка питомца {i}/{num_pets} (ID: {pet_id})")
-            pet_data = await parse_pet_details(pet_id)
-            if await process_pet(conn, pet_data):
-                success_count += 1
+            print(f"\nОбработка питомца {i}/{num_pets} (ID: {pet_id})")
+            
+            # Создаем новое соединение для каждого питомца
+            if conn.is_closed():
+                conn = await get_db_connection()
+                
+            try:
+                pet_data = await parse_pet_details(pet_id)
+                if pet_data and await process_pet(conn, pet_data):
+                    success_count += 1
+            except Exception as e:
+                print(f"Ошибка при обработке питомца {pet_id}: {str(e)}")
+                # Пересоздаем соединение при ошибке
+                if not conn.is_closed():
+                    await conn.close()
+                conn = await get_db_connection()
                 
         print("\nПарсинг завершен!")
         print(f"Успешно обработано: {success_count} из {num_pets} питомцев")
         
     finally:
-        await conn.close()
+        if not conn.is_closed():
+            await conn.close()
 
 if __name__ == "__main__":
     asyncio.run(main()) 

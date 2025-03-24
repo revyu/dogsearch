@@ -10,7 +10,7 @@ async def get_users():
     conn = await get_db_connection()
     try:
         users = await conn.fetch("""
-            SELECT id, vk_id, first_name, last_name, created_at
+            SELECT id, vk_id, first_name, last_name, phone, created_at
             FROM users
         """)
         return [dict(user) for user in users]
@@ -22,7 +22,7 @@ async def get_user(user_id: int):
     conn = await get_db_connection()
     try:
         user = await conn.fetchrow("""
-            SELECT id, vk_id, first_name, last_name, created_at
+            SELECT id, vk_id, first_name, last_name, phone, created_at
             FROM users
             WHERE id = $1
         """, user_id)
@@ -37,10 +37,10 @@ async def create_user(user: UserCreate):
     conn = await get_db_connection()
     try:
         created_user = await conn.fetchrow("""
-            INSERT INTO users (vk_id, first_name, last_name)
-            VALUES ($1, $2, $3)
-            RETURNING id, vk_id, first_name, last_name, created_at
-        """, user.vk_id, user.first_name, user.last_name)
+            INSERT INTO users (vk_id, first_name, last_name, phone)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, vk_id, first_name, last_name, created_at, phone
+        """, user.vk_id, user.first_name, user.last_name, user.phone)
         return dict(created_user)
     finally:
         await close_db_connection(conn)
@@ -53,10 +53,12 @@ async def update_user(user_id: int, user_update: UserUpdate):
             UPDATE users
             SET vk_id = $1,
                 first_name = $2,
-                last_name = $3
-            WHERE id = $4
-            RETURNING id, vk_id, first_name, last_name, created_at
-        """, user_update.vk_id, user_update.first_name, user_update.last_name, user_id)
+                last_name = $3,
+                phone = $4
+            WHERE id = $5
+            RETURNING id, vk_id, first_name, last_name, created_at, phone
+        """, user_update.vk_id, user_update.first_name, user_update.last_name, 
+             user_update.phone, user_id)
         if updated_user is None:
             raise HTTPException(status_code=404, detail="Пользователь не найден")
         return dict(updated_user)
