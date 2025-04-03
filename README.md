@@ -25,6 +25,13 @@ DATABASE_URL=postgresql+asyncpg://spf_user:uIWVTcwnX7XNZ0wyksi3dDUJ9NClQH7J@dpg-
 в терминале:  
 cd backend  
 uvicorn app.main:app --reload  
+
+### 5. запуск фронтенда
+(перед этим очевидно должен быть запущен бекенд)
+cd frontend
+npm run start 
+
+
 ## Документация API
 FastAPI автоматически генерирует интерактивную документацию:
 - Swagger UI: http://localhost:8000/docs  
