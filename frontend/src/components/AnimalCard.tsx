@@ -10,23 +10,12 @@ import {
   Button,
 } from '@vkontakte/vkui';
 
-interface Animal {
-  id: number;
-  name: string;
-  type: string;
-  breed?: string;
-  status: string;
-  reward?: number;
-  photo: string;
-  location: string;
-  owner: string;
-  postLink: string;
-  description: string;
-}
+import type {AnimalDetails} from "./Animal";
+
 
 interface Props {
   id: string;
-  animal: Animal;
+  animal: AnimalDetails;
   onBack: () => void;
 }
 

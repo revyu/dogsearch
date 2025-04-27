@@ -2,18 +2,10 @@ import { FC } from 'react';
 import { Group, Cell, Avatar, Div } from '@vkontakte/vkui';
 import { Icon28ChevronRightOutline } from '@vkontakte/icons';
 
-interface Animal {
-  id: number;
-  name: string;
-  type: string;
-  breed?: string;
-  status: string;
-  reward?: number;
-  photo: string;
-}
+import type { AnimalSummary } from './Animal';
 
 interface AnimalListProps {
-  animals: Animal[];
+  animals: AnimalSummary[];
 }
 
 export const AnimalList: FC<AnimalListProps> = ({ animals }) => {
