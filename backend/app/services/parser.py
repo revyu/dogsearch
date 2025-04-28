@@ -1,7 +1,7 @@
 import asyncio
 import re
 from playwright.async_api import async_playwright
-from app.services.geolocation import get_coordinates
+from app.services.geocoder import GetCoordinates
 
 async def get_pet_ids_from_map():
     async with async_playwright() as p:
