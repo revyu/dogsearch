@@ -35,6 +35,7 @@ def HaversineDistance(lat1, lon1, lat2, lon2):
 
     return R * c
 
+# Просто добавляет в бд информацию о координатах
 async def UpdateGeolocation():
     conn = await ConnectDB()
     try:
