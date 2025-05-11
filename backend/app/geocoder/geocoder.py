@@ -58,3 +58,4 @@ def standardize_address(location) -> str:
 
     # Формируем и возвращаем стандартизированный адрес
     return ', '.join(standardized_address)
+

@@ -10,8 +10,9 @@ async def get_animals():
     conn = await get_db_connection()
     try:
         pets = await conn.fetch("""
-            SELECT pet_id, name, gender, descriptions, images, address, user_id
-            FROM pets
+            SELECT p.pet_id, p.name, p.gender, p.descriptions, p.images, a.addr_text, p.user_id
+            FROM pets AS p
+            JOIN addresses AS a ON a.address_id = p.address_id
         """)
         return [dict(pet) for pet in pets]
     finally:
@@ -22,8 +23,9 @@ async def get_animal(pet_id: str):
     conn = await get_db_connection()
     try:
         pet = await conn.fetchrow("""
-            SELECT pet_id, name, gender, descriptions, images, address, user_id
-            FROM pets
+            SELECT p.pet_id, p.name, p.gender, p.descriptions, p.images, a.addr_text, a.user_id
+            FROM pets AS p
+            JOIN addresses AS a ON a.address_id = p.address_id
             WHERE pet_id = $1
         """, pet_id)
         if pet is None:
