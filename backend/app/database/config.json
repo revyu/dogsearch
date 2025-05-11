@@ -1,4 +1,0 @@
-{
-    "update_interval": 10,
-    "database_url": "sqlite:///./animals.db"
-}

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 # Добавляем корневую директорию проекта в путь Python
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from app.services.parser import get_pet_ids_from_map, parse_pet_details
+from app.services.geocoder import geocode
 
 load_dotenv()
 
@@ -58,19 +59,35 @@ async def process_pet(conn, pet_data):
         else:
             print("Телефон владельца не указан")
 
+
+
+        # Appending a new address
+        address_id = None
+        try:
+            print(f"Добавляем адрес с address_id: {address_id}")
+            address_id = (await conn.fetchrow("""
+                INSERT INTO addresses (addr_text)
+                VALUES ($1)
+                RETURNING address_id
+            """, pet_data["address"]))["address_id"]
+
+        except Exception as e:
+            print(f"An error occurred while appending a new address: {str(e)}")
+
         # Добавляем питомца
         print(f"Добавляем питомца с user_id: {user_id}")
+
         await conn.execute("""
             INSERT INTO pets (
                 pet_id, name, gender, descriptions, 
-                images, address, user_id
+                images, address_id, user_id
             ) VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (pet_id) DO UPDATE SET
                 name = $2,
                 gender = $3,
                 descriptions = $4,
                 images = $5,
-                address = $6,
+                address_id = $6,
                 user_id = $7
         """, 
         pet_data["id"],
@@ -78,7 +95,7 @@ async def process_pet(conn, pet_data):
         pet_data["gender"],
         pet_data["descriptions"],
         pet_data["images"],
-        pet_data["address"],
+        address_id,
         user_id)
         
         print("Питомец успешно добавлен/обновлен")

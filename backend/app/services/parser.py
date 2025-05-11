@@ -1,7 +1,7 @@
 import asyncio
 import re
 from playwright.async_api import async_playwright
-from app.services.geocoder import GetCoordinates
+
 
 async def get_pet_ids_from_map():
     async with async_playwright() as p:
@@ -46,8 +46,6 @@ async def parse_pet_details(pet_id):
         "descriptions": [],
         "images": [],
         "address": "",
-        "latitude": None, # Широта
-        "longitude": None, # Долгота
         "owner_phone": ""
     }
     
@@ -135,7 +133,6 @@ async def parse_pet_details(pet_id):
                 address = await address_element.inner_text()
                 pet_data["address"] = address.strip()
                 # Добавил определение координат
-                pet_data["latitude"], pet_data["longitude"] = get_coordinates(pet_data["address"])
             
             print(f"Собраны данные питомца: {pet_data['name'] or pet_id}")
             return pet_data
