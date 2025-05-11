@@ -7,12 +7,7 @@ from app.database.db import get_db_connection
 
 app = FastAPI(title="Поиск потерянных животных")
 
-""" Целесообразно запустить парсинг обновление базы данных в отдельном процессе """
-# Запуск фона обновления данных при старте приложения
-# @app.on_event("startup")
-# async def startup_event():
-#     # Запускаем автообновление данных в фоновом режиме
-#     asyncio.create_task(fetch_and_store_pets())
+
 
 # Настройка CORS
 app.add_middleware(
