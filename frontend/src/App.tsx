@@ -1,55 +1,60 @@
-import { useState, useEffect } from 'react';
-import { View, Panel, PanelHeader, Tabs, TabsItem, Search } from '@vkontakte/vkui';
+import React from 'react';
+import { View, Panel, PanelSpinner, Div } from '@vkontakte/vkui';
+import {
+  useRouteNavigator,
+  useActiveVkuiLocation,
+  useMetaParams,
+} from '@vkontakte/vk-mini-apps-router';
+import { useQuery } from '@tanstack/react-query';
+
+import { DEFAULT_VIEW_PANELS } from './routes';
 import { AnimalList } from './components/AnimalList';
-import { BottomPanel } from './components/BottomPanel';
+import { AnimalCard } from './components/AnimalCard';
+import { getAnimals } from './shared/api';
+import type { AnimalSummary } from './components/AnimalList';
 
-export const App = () => {
-  const [activeTab, setActiveTab] = useState<'list' | 'map'>('list');
-  const [search, setSearch] = useState('');
-  const [animalsData, setAnimalsData] = useState([]);
+export const App: React.FC = () => {
+  const navigator = useRouteNavigator();
+  const { panel }   = useActiveVkuiLocation();
+  const { id }      = useMetaParams<{ id?: string }>() ?? {};
 
-  // Функция для загрузки данных с бэкенда
-  useEffect(() => {
-    const fetchAnimals = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/animals'); // Замените на ваш URL
-        if (!response.ok) {
-          throw new Error('Ошибка при загрузке данных');
-        }
-        const data = await response.json();
-        setAnimalsData(data);
-      } catch (error) {
-        console.error('Ошибка:', error);
-      }
-    };
+  const activePanel = panel || DEFAULT_VIEW_PANELS.HOME;
 
-    fetchAnimals();
-  }, []);
+  // Для списка животных
+  const { data: animals = [], isLoading: animalsLoading } = useQuery<AnimalSummary[]>({
+    queryKey: ['animals'],
+    queryFn: getAnimals,
+  });
 
-  const filteredAnimals = animalsData.filter((animal) =>
-    animal.name.toLowerCase().includes(search.toLowerCase())
-  );
-
+  console.log(animals)
   return (
-    <View activePanel="main">
-      <Panel id="main">
-        <PanelHeader>Поиск животных</PanelHeader>
+    <View activePanel={activePanel}>
+      {/* 1) Панель СПИСКА */}
+      <Panel id={DEFAULT_VIEW_PANELS.HOME}>
+        {animalsLoading ? (
+          <PanelSpinner />
+        ) : (
+          <AnimalList
+            animals={animals}
+            onItemClick={a => navigator.push(`/animals/${a}`)}
+          />
+        )}
+      </Panel>
 
-        <Tabs>
-          <TabsItem selected={activeTab === 'map'} onClick={() => setActiveTab('map')}>
-            Карта
-          </TabsItem>
-          <TabsItem selected={activeTab === 'list'} onClick={() => setActiveTab('list')}>
-            Список
-          </TabsItem>
-        </Tabs>
-
-        <Search value={search} onChange={(e) => setSearch(e.target.value)} />
-
-        {activeTab === 'list' && <AnimalList animals={filteredAnimals} />}
-
-        <BottomPanel />
+      {/* 2) Панель КАРТОЧКИ */}
+      <Panel id={DEFAULT_VIEW_PANELS.ANIMAL}>
+        {id ? (
+          <AnimalCard
+            id={DEFAULT_VIEW_PANELS.ANIMAL}
+            petId={id}
+            onBack={() => navigator.back()}
+          />
+        ) : (
+          <Div style={{ padding: 16 }}>Животное не найдено</Div>
+        )}
       </Panel>
     </View>
   );
 };
+
+export default App;
