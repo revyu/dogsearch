@@ -4,7 +4,6 @@ import asyncio
 import sys
 import math
 from dotenv import load_dotenv
-from app.services.geocoder import geocode
 from app.database.db import get_db_connection, close_db_connection
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -248,13 +247,12 @@ async def main():
     # await delete_all_rows_from_table("addresses")
     # await delete_all_rows_from_table("users")
     # await delete_all_rows_from_table("regions")
-
+    #
     await print_all_rows_from_table("pets")
     await print_all_rows_from_table("addresses")
     await print_all_rows_from_table("users")
     await print_all_rows_from_table("regions")
-
-
+    # await describe_database()
 
 
 if __name__ == "__main__":
