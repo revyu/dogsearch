@@ -7,8 +7,25 @@ from dotenv import load_dotenv
 # Добавляем корневую директорию проекта в путь Python
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from app.services.parser import get_pet_ids_from_map, parse_pet_details
-
 load_dotenv()
+
+
+
+# Клиентский метод запроса на обработку адреса для питомца _________________________
+async def address_append_request(pet_id, address):
+    # Создаем подключение к серверу
+    reader, writer = await asyncio.open_connection(os.getenv("GEOCODER_SERVER_URL"), os.getenv("GEOCODER_SERVER_PORT"))
+    # Формируем сообщение для отправки
+    message = f"{pet_id} {address}"
+    # Отправляем сообщение на сервер
+    writer.write(message.encode())
+    await writer.drain()
+    # Закрываем соединение
+    writer.close()
+    await writer.wait_closed()
+# __________________________________________________________________________________
+
+
 
 async def get_db_connection():
     return await asyncpg.connect(
@@ -58,30 +75,32 @@ async def process_pet(conn, pet_data):
         else:
             print("Телефон владельца не указан")
 
+
         # Добавляем питомца
         print(f"Добавляем питомца с user_id: {user_id}")
+
         await conn.execute("""
             INSERT INTO pets (
                 pet_id, name, gender, descriptions, 
-                images, address, user_id
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                images, user_id
+            ) VALUES ($1, $2, $3, $4, $5, $6)
             ON CONFLICT (pet_id) DO UPDATE SET
                 name = $2,
                 gender = $3,
                 descriptions = $4,
                 images = $5,
-                address = $6,
-                user_id = $7
+                user_id = $6
         """, 
         pet_data["id"],
         pet_data["name"],
         pet_data["gender"],
         pet_data["descriptions"],
         pet_data["images"],
-        pet_data["address"],
         user_id)
         
         print("Питомец успешно добавлен/обновлен")
+
+        await address_append_request(pet_data["id"], pet_data["address"])
         return True
     except Exception as e:
         print(f"Ошибка при обработке питомца {pet_data['id']}: {str(e)}")

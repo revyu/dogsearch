@@ -2,6 +2,7 @@ import asyncio
 import re
 from playwright.async_api import async_playwright
 
+
 async def get_pet_ids_from_map():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -131,6 +132,7 @@ async def parse_pet_details(pet_id):
             if address_element:
                 address = await address_element.inner_text()
                 pet_data["address"] = address.strip()
+                # Добавил определение координат
             
             print(f"Собраны данные питомца: {pet_data['name'] or pet_id}")
             return pet_data
